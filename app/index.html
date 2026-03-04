@@ -1,0 +1,840 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>AtlasVision — Real-Time Global Intelligence & Space Tracking</title>
+  <meta name="description"
+    content="Real-time global intelligence with satellite tracking, orbit prediction, pass scheduling, asteroid/comet monitoring, planet tracking, ship AIS, flight ADS-B, space news, and AI threat analysis." />
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link
+    href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&family=JetBrains+Mono:wght@400;500;600;700&display=swap"
+    rel="stylesheet" />
+  <link href="https://unpkg.com/cesium@1.129.0/Build/Cesium/Widgets/widgets.css" rel="stylesheet" />
+</head>
+
+<body>
+  <div id="app">
+    <!-- Top Navigation -->
+    <header id="top-nav">
+      <div class="nav-brand">
+        <div class="brand-icon">
+          <svg viewBox="0 0 40 40" fill="none" xmlns="http://www.w3.org/2000/svg">
+            <circle cx="20" cy="20" r="18" stroke="url(#grad1)" stroke-width="2" fill="none" />
+            <ellipse cx="20" cy="20" rx="18" ry="8" stroke="url(#grad1)" stroke-width="1.5" fill="none"
+              transform="rotate(30 20 20)" />
+            <ellipse cx="20" cy="20" rx="18" ry="8" stroke="url(#grad1)" stroke-width="1.5" fill="none"
+              transform="rotate(-30 20 20)" />
+            <circle cx="20" cy="20" r="3" fill="url(#grad1)" />
+            <defs>
+              <linearGradient id="grad1" x1="0%" y1="0%" x2="100%" y2="100%">
+                <stop offset="0%" style="stop-color:#00d4ff;stop-opacity:1" />
+                <stop offset="100%" style="stop-color:#7b61ff;stop-opacity:1" />
+              </linearGradient>
+            </defs>
+          </svg>
+        </div>
+        <div class="brand-text">
+          <h1>AtlasVision</h1>
+          <span class="brand-subtitle">SPACE &amp; INTELLIGENCE</span>
+        </div>
+      </div>
+
+      <nav class="nav-tabs">
+        <button class="tab-btn active" data-page="dashboard" id="tab-dashboard">
+          <span>🌍</span> Dashboard
+        </button>
+        <button class="tab-btn" data-page="flights" id="tab-flights">
+          <span>✈️</span> Flights
+        </button>
+        <button class="tab-btn" data-page="space" id="tab-space">
+          <span>🚀</span> Space & Satellites
+        </button>
+        <button class="tab-btn" data-page="intel-cyber" id="tab-intel-cyber">
+          <span>🧠</span> SIGINT & Cyber
+        </button>
+        <button class="tab-btn" data-page="war" id="tab-war">
+          <span>⚔️</span> War
+        </button>
+        <button class="tab-btn" data-page="health" id="tab-health">
+          <span>🏥</span> Health
+        </button>
+        <button class="tab-btn" data-page="finance" id="tab-finance">
+          <span>💹</span> Finance
+        </button>
+        <button class="tab-btn" data-page="about" id="tab-about">
+          <span>ℹ️</span> About
+        </button>
+      </nav>
+
+      <button id="btn-global-globe-toggle"
+        style="position:fixed; bottom:30px; right:30px; z-index:999999; background:rgba(0,212,255,0.2); border:2px solid #00d4ff; color:#00e5ff; border-radius:50%; width:60px; height:60px; font-size:28px; cursor:pointer; box-shadow:0 0 20px rgba(0,212,255,0.4); display:flex; align-items:center; justify-content:center; transition:all 0.3s;"
+        title="Toggle Global 3D View">🌍</button>
+
+      <div class="nav-status">
+        <div class="nav-layers-mini">
+          <button class="layer-btn active" data-layer="flights" id="btn-flights" title="Flights">
+            <span class="layer-icon">✈️</span>
+            <span class="layer-count" id="flight-count">—</span>
+          </button>
+          <button class="layer-btn active" data-layer="ships" id="btn-ships" title="Ships">
+            <span class="layer-icon">🚢</span>
+            <span class="layer-count" id="ship-count">—</span>
+          </button>
+          <button class="layer-btn active" data-layer="satellites" id="btn-satellites" title="Satellites">
+            <span class="layer-icon">🛰️</span>
+            <span class="layer-count" id="satellite-count">—</span>
+          </button>
+          <button class="layer-btn active" data-layer="earthquakes" id="btn-earthquakes" title="Quakes">
+            <span class="layer-icon">🌋</span>
+            <span class="layer-count" id="earthquake-count">—</span>
+          </button>
+        </div>
+        <div class="status-indicator">
+          <span class="status-dot pulse"></span>
+          <span class="status-text">LIVE</span>
+        </div>
+        <div class="clock" id="utc-clock">00:00:00 UTC</div>
+      </div>
+    </header>
+
+    <!-- ========================================
+         PAGE 1: DASHBOARD (Map + News + Intel)
+         ======================================== -->
+    <div id="page-dashboard" class="page active">
+      <main class="dashboard-layout">
+        <!-- Left: News -->
+        <aside id="news-panel" class="panel glass-panel">
+          <div class="panel-header">
+            <h2>📰 Live Intelligence</h2>
+            <select id="news-filter" class="filter-select">
+              <option value="all">All News</option>
+              <option value="conflict">Conflict</option>
+              <option value="military">Military</option>
+              <option value="disaster">Disasters</option>
+              <option value="economy">Economy</option>
+              <option value="tech">Space/Tech</option>
+            </select>
+          </div>
+          <div class="news-search-container" style="padding: 10px; border-bottom: 1px solid var(--border-subtle);">
+            <input type="search" id="news-search-input" class="query-input" placeholder="Search 100+ global sources..."
+              style="width: 100%; box-sizing: border-box;" />
+          </div>
+          <div id="news-list" class="news-list">
+            <div class="loading-skeleton">
+              <div class="skeleton-line"></div>
+              <div class="skeleton-line short"></div>
+            </div>
+          </div>
+        </aside>
+
+        <div class="resizer" id="resizer-left"></div>
+
+        <!-- Center: Map -->
+        <section class="map-section">
+          <div id="map-container"></div>
+          <div class="map-controls">
+            <div class="tile-switcher">
+              <button class="tile-switch-btn active" data-tile="dark">Dark</button>
+              <button class="tile-switch-btn" data-tile="satellite">Satellite</button>
+              <button class="tile-switch-btn" data-tile="terrain">Terrain</button>
+            </div>
+            <div class="region-presets">
+              <button class="preset-btn" data-region="global">🌍 Global</button>
+              <button class="preset-btn" data-region="americas">🌎 Americas</button>
+              <button class="preset-btn" data-region="europe">🇪🇺 Europe</button>
+              <button class="preset-btn" data-region="mena">🕌 MENA</button>
+              <button class="preset-btn" data-region="asia">🏯 Asia</button>
+              <button class="preset-btn" data-region="india">🇮🇳 India</button>
+              <button class="preset-btn" id="btn-geolocate"
+                style="background:rgba(0,212,255,0.2);color:#00e5ff;font-weight:bold;">📍 My Location</button>
+            </div>
+          </div>
+          <!-- Correlation Badge -->
+          <div id="correlation-badge" class="correlation-badge" style="display:none;">
+            <span class="cor-icon">⚡</span>
+            <span class="cor-text" id="cor-count">0 anomalies</span>
+          </div>
+        </section>
+
+        <div class="resizer" id="resizer-right"></div>
+
+        <!-- Right: Threat + Intel Console -->
+        <aside id="intel-panel" class="panel glass-panel">
+          <div class="panel-header">
+            <h2>⚠️ Threat Assessment</h2>
+          </div>
+          <!-- Threat Gauge -->
+          <div class="threat-section">
+            <div class="threat-gauge">
+              <svg viewBox="0 0 200 120" class="gauge-svg">
+                <defs>
+                  <linearGradient id="gaugeGrad" x1="0%" y1="0%" x2="100%" y2="0%">
+                    <stop offset="0%" stop-color="#00e676" />
+                    <stop offset="33%" stop-color="#ffeb3b" />
+                    <stop offset="66%" stop-color="#ff9800" />
+                    <stop offset="100%" stop-color="#ff1744" />
+                  </linearGradient>
+                </defs>
+                <path d="M 20 100 A 80 80 0 0 1 180 100" fill="none" stroke="#1a1a1a" stroke-width="12"
+                  stroke-linecap="round" />
+                <path id="gauge-fill" d="M 20 100 A 80 80 0 0 1 180 100" fill="none" stroke="url(#gaugeGrad)"
+                  stroke-width="12" stroke-linecap="round" stroke-dasharray="251" stroke-dashoffset="251" />
+                <text id="gauge-value" x="100" y="85" text-anchor="middle" fill="#e8e8e8" font-size="32"
+                  font-weight="700" font-family="JetBrains Mono">—</text>
+                <text x="100" y="105" text-anchor="middle" fill="#555" font-size="10" font-family="Inter">GLOBAL
+                  THREAT LEVEL</text>
+              </svg>
+            </div>
+            <div id="threat-badge" class="threat-badge level-low">LOW</div>
+          </div>
+          <!-- Signal Chips -->
+          <div class="signals-section">
+            <h3>Active Signals</h3>
+            <div class="signal-chips">
+              <div class="signal-chip"><span class="chip-icon">✈️</span><span class="chip-label">Flights</span><span
+                  class="chip-value" id="sig-flights">—</span></div>
+              <div class="signal-chip"><span class="chip-icon">🚢</span><span class="chip-label">Ships</span><span
+                  class="chip-value" id="sig-ships">—</span></div>
+              <div class="signal-chip"><span class="chip-icon">🛰️</span><span class="chip-label">Sats</span><span
+                  class="chip-value" id="sig-satellites">—</span></div>
+              <div class="signal-chip"><span class="chip-icon">🌋</span><span class="chip-label">Quakes</span><span
+                  class="chip-value" id="sig-earthquakes">—</span></div>
+              <div class="signal-chip"><span class="chip-icon">📰</span><span class="chip-label">News</span><span
+                  class="chip-value" id="sig-news">—</span></div>
+              <div class="signal-chip"><span class="chip-icon">⚡</span><span class="chip-label">Anomalies</span><span
+                  class="chip-value" id="sig-anomalies">—</span></div>
+            </div>
+          </div>
+          <!-- AI Brief -->
+          <div class="intel-brief-section">
+            <h3>🧠 AI Brief</h3>
+            <div id="ai-brief" class="ai-brief">
+              <p class="brief-placeholder">Analyzing global situation...</p>
+            </div>
+          </div>
+          <!-- Intelligence Console -->
+          <div class="intel-console-section">
+            <h3>🔍 Intelligence Query</h3>
+            <div class="query-input-row">
+              <input type="text" id="intel-query-input" placeholder="What is happening near Mumbai?"
+                class="query-input" />
+              <button id="intel-query-btn" class="query-btn">⏎</button>
+            </div>
+            <div id="intel-query-output" class="query-output">
+              <p class="text-xs text-muted">Ask about any location, strategic zone, or coordinates.</p>
+            </div>
+          </div>
+        </aside>
+      </main>
+
+      <div class="resizer-h" id="resizer-bottom"></div>
+
+      <!-- Bottom: Live Video -->
+      <section id="video-section" class="glass-panel">
+        <div class="panel-header video-header">
+          <h2>📺 Live Streams</h2>
+        </div>
+        <div id="video-grid" class="video-grid"></div>
+      </section>
+    </div>
+    <!-- PAGE 2: SPACE (merged into Satellites) -->
+
+    <!-- PAGE 3: INTELLIGENCE -->
+    <!-- Hidden stubs for old intel IDs (referenced by old code still running) -->
+    <div id="page-intel" class="page" style="display:none!important;">
+      <div id="intel-sigint-feed"></div>
+      <div id="intel-map" style="display:none;"></div>
+      <div id="india-zones-list"></div>
+      <div id="risk-heatmap"></div>
+      <div id="deep-query-input" style="display:none;"></div>
+      <div id="deep-query-btn" style="display:none;"></div>
+      <div id="deep-query-output"></div>
+    </div>
+
+
+    <!-- ========================================
+         PAGE 4: WAR DASHBOARD
+         ======================================== -->
+    <div id="page-war" class="page">
+      <div class="dashboard-layout" style="height:65vh;">
+        <!-- Left: Conflicts & Deployments -->
+        <aside class="panel">
+          <div class="glass-panel space-card war-left-card" style="flex:1;">
+            <div class="panel-header">
+              <h2>⚔️ Global Conflict Zones</h2>
+            </div>
+            <div id="war-zones-list" style="padding: 10px; overflow-y: auto;">
+              <p class="text-xs text-muted">Loading conflict data...</p>
+            </div>
+          </div>
+        </aside>
+
+        <div class="resizer" id="resizer-war-left"></div>
+
+        <!-- Center: Theater Map -->
+        <section class="map-section">
+          <div class="glass-panel space-card"
+            style="height: 100%; display: flex; flex-direction: column; overflow: hidden; margin: 0;">
+            <div class="panel-header" style="flex-shrink: 0; background: rgba(0,0,0,0.8); z-index: 10;">
+              <h2>🗺️ Theater of Operations Map</h2>
+            </div>
+            <div id="war-map" style="flex: 1; width: 100%; border-radius: 0 0 8px 8px; z-index: 1;"></div>
+          </div>
+        </section>
+
+        <div class="resizer" id="resizer-war-right"></div>
+
+        <!-- Right: Live Escalations + Panoptic -->
+        <aside class="panel">
+          <div class="glass-panel space-card war-right-card" style="flex: 1;">
+            <div class="panel-header">
+              <h2>💣 Live Escalations</h2>
+            </div>
+            <div id="escalations-list"
+              style="padding: 10px; color: #ff1744; font-family: monospace; font-size: 11px; overflow-y: auto;"></div>
+          </div>
+          <div class="glass-panel space-card war-left-card" style="flex: 1;">
+            <div class="panel-header">
+              <h2>🛡️ Troop Deployments</h2>
+            </div>
+            <div id="troop-movements" style="padding: 10px; overflow-y: auto;"></div>
+          </div>
+        </aside>
+      </div>
+
+      <div class="resizer-h"></div>
+
+      <!-- Bottom Half: War Intels -->
+      <section style="height:35vh; display:flex; gap:10px; padding:10px; background:rgba(0,0,0,0.5);">
+        <div class="glass-panel space-card" style="flex:1; display:flex; flex-direction:column; overflow:hidden;">
+          <div class="panel-header">
+            <h2>📡 Strategic Asset Tracking</h2>
+          </div>
+          <div id="cyber-threats-list"
+            style="padding: 10px; overflow-y:auto; flex:1; font-family: monospace; font-size: 11px;"></div>
+        </div>
+        <div class="glass-panel space-card" style="flex:1; display:flex; flex-direction:column; overflow:hidden;">
+          <div class="panel-header">
+            <h2>👁️ Panoptic Detection</h2>
+          </div>
+          <div id="panoptic-feed"
+            style="padding: 10px; overflow-y:auto; flex:1; font-family: monospace; font-size: 11px;"></div>
+        </div>
+      </section>
+    </div>
+
+    <!-- ========================================
+         PAGE: FLIGHTS DASHBOARD
+         ======================================== -->
+    <div id="page-flights" class="page">
+      <div class="dashboard-layout" style="height:65vh;">
+        <!-- Left: Search -->
+        <aside class="panel">
+          <div class="glass-panel space-card" style="flex:1; display:flex; flex-direction:column; min-height:0;">
+            <div class="panel-header">
+              <h2>✈️ Flight Search</h2>
+            </div>
+            <div style="padding:10px; display:flex; flex-direction:column; flex:1; min-height:0;">
+              <div class="query-input-row">
+                <input type="text" id="flight-search-input" class="query-input" placeholder="Callsign, ICAO24..." />
+                <button id="flight-search-btn" class="query-btn">⏎</button>
+              </div>
+              <div id="flight-search-results" style="margin-top:8px;flex:1;overflow-y:auto;"></div>
+            </div>
+          </div>
+        </aside>
+
+        <div class="resizer" id="resizer-flights-left"></div>
+
+        <!-- Center: Flights Map -->
+        <section class="map-section" style="display:flex;flex-direction:column;">
+          <div class="glass-panel space-card"
+            style="flex:1;display:flex;flex-direction:column;overflow:hidden;margin:0;min-height:0;">
+            <div class="panel-header" style="flex-shrink:0;background:rgba(0,0,0,0.85);z-index:10;gap:8px;">
+              <h2>🌍 Live ADS-B Flight Tracker</h2>
+              <span id="flight-status-bar" style="font-size:11px;color:#666;font-family:monospace;">⏳
+                Connecting...</span>
+            </div>
+            <div id="flights-map" style="flex:1;width:100%;z-index:1;"></div>
+          </div>
+        </section>
+
+        <div class="resizer" id="resizer-flights-right"></div>
+
+        <!-- Right: Stats & Airborne -->
+        <aside class="panel">
+          <div class="glass-panel space-card" style="flex:0 0 auto;">
+            <div class="panel-header">
+              <h2>📊 Live Statistics</h2>
+            </div>
+            <div id="flight-stats" style="padding:10px;display:grid;grid-template-columns:1fr 1fr;gap:8px;"></div>
+          </div>
+          <div class="glass-panel space-card" style="flex:1;min-height:0;overflow:hidden;">
+            <div class="panel-header">
+              <h2>🛫 Airborne Now</h2>
+            </div>
+            <div id="flight-list-panel"
+              style="padding:8px;overflow-y:auto;height:calc(100% - 40px);font-family:monospace;font-size:10px;"></div>
+          </div>
+        </aside>
+      </div>
+
+      <div class="resizer-h"></div>
+
+      <!-- Bottom Half: Flights Intelligence -->
+      <section style="height:35vh; display:flex; gap:10px; padding:10px; background:rgba(0,0,0,0.5);">
+        <div class="glass-panel space-card" style="flex:1; display:flex; flex-direction:column; overflow:hidden;">
+          <div class="panel-header">
+            <h2>📰 Aviation Intelligence News Feed</h2>
+          </div>
+          <div id="aviation-news-feed" style="overflow-y:auto;flex:1;padding:8px;font-size:11px;"></div>
+        </div>
+      </section>
+    </div>
+  </div>
+
+
+  <!-- ========================================
+         PAGE: SATELLITES & SPACE DASHBOARD
+         ======================================== -->
+  <div id="page-satellites" class="page" style="overflow-y:auto; overflow-x:hidden;">
+
+    <!-- Top Half: Satellites Map & Tools -->
+    <div style="height: 65vh; width: 100%;">
+      <div class="dashboard-layout" style="width: 100%; height: 100%;">
+        <!-- Left: Satellite List + Search -->
+        <aside class="panel">
+          <div class="glass-panel space-card" style="flex:0 0 auto;">
+            <div class="panel-header">
+              <h2>🔍 Satellite Search</h2>
+            </div>
+            <div style="padding:10px;">
+              <div class="query-input-row">
+                <input type="text" id="sat-search-input" class="query-input"
+                  placeholder="ISS, Starlink-1007, NORAD ID..." />
+                <button id="sat-search-btn" class="query-btn">⏎</button>
+              </div>
+            </div>
+          </div>
+          <div class="glass-panel space-card" style="flex:0 0 auto;">
+            <div class="panel-header">
+              <h2>📊 Satellite Stats</h2>
+            </div>
+            <div id="sat-stats-cards" style="padding:10px;display:grid;grid-template-columns:1fr 1fr;gap:8px;"></div>
+          </div>
+          <div class="glass-panel space-card" style="flex:2;overflow:hidden;">
+            <div class="panel-header">
+              <h2>📝 Satellite Atlas</h2>
+            </div>
+            <div id="sat-list-panel"
+              style="padding:8px;overflow-y:auto;height:calc(100% - 40px);font-family:monospace;font-size:10px;">
+            </div>
+          </div>
+          <div class="glass-panel space-card" style="flex:1;">
+            <div class="panel-header">
+              <h2>🌠 Orbit Data</h2>
+            </div>
+            <div id="sat-detail-info" style="padding:10px;font-size:11px;">
+              <p class="text-muted text-xs">Click a satellite to view orbit track...</p>
+            </div>
+          </div>
+        </aside>
+
+        <div class="resizer" id="resizer-sats-left"></div>
+
+        <!-- Center: Satellites Map -->
+        <section class="map-section">
+          <div class="glass-panel space-card"
+            style="height:100%;display:flex;flex-direction:column;overflow:hidden;margin:0;">
+            <div class="panel-header" style="flex-shrink:0;background:rgba(0,0,0,0.8);z-index:10;">
+              <h2>🛰️ Earth Orbit Live View</h2>
+              <span style="font-size:11px;color:#666;">SGP4 propagated | Updates every 30s | Color = orbital
+                zone</span>
+            </div>
+            <div id="satellites-map" style="flex:1;width:100%;border-radius:0 0 8px 8px;z-index:1;"></div>
+          </div>
+        </section>
+        <!-- Right: Telemetry / Details -->
+        <div class="resizer" id="resizer-sats-right"></div>
+        <aside class="panel">
+          <div class="glass-panel space-card" id="sat-detail-panel" style="flex:1;">
+            <div class="panel-header">
+              <h2>🛰️ Satellite Detail</h2>
+            </div>
+            <div id="sat-detail-content"></div>
+          </div>
+          <div class="glass-panel space-card" style="flex:1;">
+            <div class="panel-header">
+              <h2>📡 Orbital Nodes Status</h2>
+            </div>
+            <div style="padding:10px; font-size:11px; color:#aaa;">Network connections stable. Receiving SGP4 metrics
+              continuously.</div>
+          </div>
+        </aside>
+      </div>
+    </div>
+
+    <div class="resizer-h"></div>
+
+    <!-- Bottom Half: Deep Space & Astronomy (The old page-space content) -->
+    <div style="width: 100%; height: 35vh; overflow-y:auto; overflow-x:hidden;">
+      <div class="space-layout" style="width: 100%; height: 100%; overflow: visible;">
+        <div class="space-col">
+          <div class="glass-panel space-card">
+            <div class="panel-header">
+              <h2>🛰️ Satellite Pass Predictor</h2>
+            </div>
+            <div class="pass-form">
+              <input type="text" id="pass-sat-input" placeholder="Search satellite (e.g., ISS, STARLINK-1007)"
+                class="query-input" />
+              <div class="pass-coords">
+                <label>Lat <input type="number" id="pass-lat" step="0.1" class="coord-input" /></label>
+                <label>Lon <input type="number" id="pass-lon" step="0.1" class="coord-input" /></label>
+                <button id="pass-predict-btn" class="query-btn">Predict</button>
+              </div>
+            </div>
+            <div id="pass-results" class="pass-results">
+              <p class="text-xs text-muted">Enter a satellite name and your location to see upcoming passes.</p>
+            </div>
+          </div>
+          <div class="glass-panel space-card" id="sat-detail-panel" style="display:none;">
+            <div class="panel-header">
+              <h2>🛰️ Satellite Detail</h2>
+            </div>
+            <div id="sat-detail-content"></div>
+          </div>
+          <div class="glass-panel space-card">
+            <div class="panel-header">
+              <h2>🎥 Space Live Feeds</h2>
+            </div>
+            <div class="iss-feed" style="max-height: 400px; overflow-y: auto;">
+              <p class="text-xs text-muted" style="margin-top:4px;">NASA ISS HD Earth Viewing</p>
+              <iframe src="https://www.youtube.com/embed/xAieE-QtOeM?autoplay=0&mute=1"
+                allow="autoplay; encrypted-media" allowfullscreen
+                style="width:100%;height:180px;border:none;border-radius:8px; margin-bottom: 10px;"></iframe>
+              <p class="text-xs text-muted" style="margin-top:4px;">NASA TV - Official Stream</p>
+              <iframe src="https://www.youtube.com/embed/21X5lGlDOfg?autoplay=0&mute=1"
+                allow="autoplay; encrypted-media" allowfullscreen
+                style="width:100%;height:180px;border:none;border-radius:8px;"></iframe>
+            </div>
+          </div>
+          <div class="glass-panel space-card">
+            <div class="panel-header">
+              <h2>🔭 Astronomy Picture of the Day</h2>
+            </div>
+            <div id="apod-container" class="apod-container">
+              <div class="loading-skeleton">
+                <div class="skeleton-line"></div>
+              </div>
+            </div>
+          </div>
+        </div>
+        <div class="space-col">
+          <div class="glass-panel space-card">
+            <div class="panel-header">
+              <h2>☄️ Near-Earth Objects</h2><span class="badge" id="neo-count">—</span>
+            </div>
+            <div id="neo-list" class="neo-list">
+              <div class="loading-skeleton">
+                <div class="skeleton-line"></div>
+              </div>
+            </div>
+          </div>
+          <div class="glass-panel space-card">
+            <div class="panel-header">
+              <h2>🚀 Upcoming Launches</h2><span class="badge" id="launch-count">—</span>
+            </div>
+            <div id="launch-list" class="launch-list">
+              <div class="loading-skeleton">
+                <div class="skeleton-line"></div>
+              </div>
+            </div>
+          </div>
+        </div>
+        <div class="space-col">
+          <div class="glass-panel space-card">
+            <div class="panel-header">
+              <h2>🪐 Solar System</h2>
+            </div>
+            <div id="planet-list" class="planet-list"></div>
+          </div>
+          <div class="glass-panel space-card">
+            <div class="panel-header">
+              <h2>🚀 Space News</h2><span class="badge" id="space-news-count">—</span>
+            </div>
+            <div id="space-news-list" class="space-news-list">
+              <div class="loading-skeleton">
+                <div class="skeleton-line"></div>
+              </div>
+            </div>
+          </div>
+          <div class="glass-panel space-card">
+            <div class="panel-header">
+              <h2>🌡️ Global Weather</h2><span class="badge" id="weather-count">—</span>
+            </div>
+            <div id="weather-list" class="weather-list">
+              <div class="loading-skeleton">
+                <div class="skeleton-line"></div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Old page-cyber hidden stub (IDs kept for any still-running old code) -->
+  <div id="page-cyber" class="page" style="display:none!important;">
+    <div id="cyber-news-list"></div>
+    <div id="cyber-map" style="display:none;"></div>
+    <div id="cyber-threats-list-v2"></div>
+    <div id="cyber-exploits-list"></div>
+  </div>
+
+  <!-- ==========================================
+         PAGE: SIGINT & CYBER (Merged Intel + Cyber)
+         ========================================== -->
+  <div id="page-intel-cyber" class="page">
+    <div class="dashboard-layout" style="height:65vh;">
+      <aside class="panel">
+        <div class="glass-panel space-card" style="flex:0 0 auto;">
+          <div class="panel-header">
+            <h2>🔍 Intel Query Engine</h2>
+          </div>
+          <div style="padding:10px;">
+            <div class="query-input-row">
+              <input type="text" id="icyber-query-input" class="query-input"
+                placeholder="South China Sea, LAC, Tehran..." />
+              <button id="icyber-query-btn" class="query-btn">Analyze</button>
+            </div>
+            <div id="icyber-query-output" style="margin-top:8px;max-height:100px;overflow-y:auto;"></div>
+          </div>
+        </div>
+        <div class="glass-panel space-card" style="flex:0 0 auto;">
+          <div class="panel-header">
+            <h2>🔓 Live CVE / Zero-Days</h2>
+          </div>
+          <div id="icyber-cve-feed" style="padding:10px;overflow-y:auto;max-height:240px;"></div>
+        </div>
+        <div class="glass-panel space-card" style="flex:1;min-height:0;overflow:hidden;">
+          <div class="panel-header">
+            <h2>📡 SIGINT Intercepts</h2>
+          </div>
+          <div id="icyber-sigint-feed"
+            style="padding:8px;overflow-y:auto;height:calc(100% - 40px);font-family:monospace;font-size:10px;"></div>
+        </div>
+      </aside>
+      <div class="resizer" id="resizer-icyber-left"></div>
+      <section class="map-section" style="display:flex;flex-direction:column;">
+        <div class="glass-panel space-card"
+          style="flex:1;display:flex;flex-direction:column;overflow:hidden;margin:0;min-height:0;">
+          <div class="panel-header" style="flex-shrink:0;background:rgba(0,0,0,0.85);z-index:10;gap:8px;">
+            <h2>🌐 Global Threat Intelligence Map</h2>
+            <span style="font-size:11px;color:#e040fb;font-family:monospace;">APT Actors | Intrusions | Risk
+              Zones</span>
+          </div>
+          <div id="icyber-map" style="flex:1;width:100%;z-index:1;"></div>
+        </div>
+      </section>
+      <div class="resizer" id="resizer-icyber-right"></div>
+      <aside class="panel">
+        <div class="glass-panel space-card" style="flex:0 0 auto;">
+          <div class="panel-header">
+            <h2>🕷️ Active Intrusions</h2>
+          </div>
+          <div id="icyber-intrusions-feed" style="padding:8px;overflow-y:auto;max-height:220px;font-size:10px;"></div>
+        </div>
+        <div class="glass-panel space-card" style="flex:1;min-height:0;overflow:hidden;">
+          <div class="panel-header">
+            <h2>🔥 Global Risk Heatmap</h2>
+          </div>
+          <div id="icyber-risk-heatmap" style="padding:10px;"></div>
+        </div>
+      </aside>
+    </div>
+
+    <div class="resizer-h"></div>
+
+    <!-- Bottom Half: Cyber Details -->
+    <section style="height:35vh; display:flex; gap:10px; padding:10px; background:rgba(0,0,0,0.5);">
+      <div class="glass-panel space-card" style="flex:1; display:flex; flex-direction:column; overflow:hidden;">
+        <div class="panel-header">
+          <h2>📰 Cyber News Feed</h2>
+        </div>
+        <div id="icyber-news-feed" style="overflow-y:auto;flex:1;font-size:11px;"></div>
+      </div>
+      <div class="glass-panel space-card" style="flex:1; display:flex; flex-direction:column; overflow:hidden;">
+        <div class="panel-header">
+          <h2>📡 SIGINT Intercepts</h2>
+        </div>
+        <div id="icyber-sigint-feed" style="padding:8px;overflow-y:auto;flex:1;font-family:monospace;font-size:10px;">
+        </div>
+      </div>
+    </section>
+  </div>
+
+  <!-- ==========================================
+         PAGE: HEALTH DASHBOARD
+         ========================================== -->
+  <div id="page-health" class="page">
+    <div class="dashboard-layout">
+      <aside class="panel">
+        <div class="glass-panel space-card" style="flex:0 0 auto;">
+          <div class="panel-header">
+            <h2>📊 Global Health Stats</h2>
+          </div>
+          <div id="health-global-stats" style="padding:10px;display:grid;grid-template-columns:1fr 1fr;gap:8px;">
+          </div>
+        </div>
+        <div class="glass-panel space-card" style="flex:1;min-height:0;overflow:hidden;">
+          <div class="panel-header">
+            <h2>🦠 Active Disease Outbreaks</h2>
+          </div>
+          <div id="health-outbreaks-list" style="overflow-y:auto;height:calc(100% - 40px);"></div>
+        </div>
+      </aside>
+      <div class="resizer" id="resizer-health-left"></div>
+      <section class="map-section" style="display:flex;flex-direction:column;">
+        <div class="glass-panel space-card"
+          style="flex:1;display:flex;flex-direction:column;overflow:hidden;margin:0;min-height:0;">
+          <div class="panel-header" style="flex-shrink:0;background:rgba(0,0,0,0.85);z-index:10;gap:8px;">
+            <h2>🗺️ Global Disease Surveillance Map</h2>
+            <span style="font-size:11px;color:#00e676;font-family:monospace;">WHO · CDC · ECDC · ProMED</span>
+          </div>
+          <div id="health-map" style="flex:1;width:100%;z-index:1;"></div>
+        </div>
+      </section>
+      <div class="resizer" id="resizer-health-right"></div>
+      <aside class="panel">
+        <div class="glass-panel space-card" style="flex:0 0 auto;">
+          <div class="panel-header">
+            <h2>💉 Global Vaccination Coverage</h2>
+          </div>
+          <div id="health-vaccination-bars" style="padding:10px;"></div>
+        </div>
+        <div class="glass-panel space-card" style="flex:0 0 auto;">
+          <div class="panel-header">
+            <h2>🧬 Antimicrobial Resistance (AMR)</h2>
+          </div>
+          <div id="health-amr-chart" style="padding:10px;"></div>
+        </div>
+        <div class="glass-panel space-card" style="flex:1;min-height:0;overflow:hidden;">
+          <div class="panel-header">
+            <h2>📰 Health Intelligence Feed</h2>
+          </div>
+          <div id="health-news-feed" style="overflow-y:auto;height:calc(100% - 40px);font-size:11px;"></div>
+        </div>
+      </aside>
+    </div>
+  </div>
+
+
+  <!-- ========================================
+         PAGE 6: FINANCE DASHBOARD
+         ======================================== -->
+  <div id="page-finance" class="page">
+    <div class="dashboard-layout">
+      <!-- Left: Global Equities Screener -->
+      <aside class="panel" style="width: 380px;">
+        <div class="glass-panel space-card finance-left-card"
+          style="flex:1; display:flex; flex-direction:column; border-radius: 8px; overflow: hidden; padding: 0;">
+          <div id="tv-screener" style="flex:1; width: 100%;"></div>
+        </div>
+      </aside>
+
+      <div class="resizer" id="resizer-finance-left"></div>
+
+      <!-- Center: Advanced Charting (News, History, All Stocks) -->
+      <section class="map-section" style="display:flex; flex-direction:column; padding:0; margin:0;">
+        <div class="glass-panel space-card"
+          style="flex:1; border-radius: 8px; overflow: hidden; padding: 0; display:flex; flex-direction:column; margin-top:0;">
+          <div id="tv-chart" style="flex:1; width: 100%;"></div>
+        </div>
+      </section>
+
+      <div class="resizer" id="resizer-finance-right"></div>
+
+      <!-- Right: Crypto Market Watch -->
+      <aside class="panel" style="width: 380px;">
+        <div class="glass-panel space-card finance-right-card"
+          style="flex:1; display:flex; flex-direction:column; border-radius: 8px; overflow: hidden; padding: 0;">
+          <div id="tv-crypto" style="flex:1; width: 100%;"></div>
+        </div>
+      </aside>
+    </div>
+  </div>
+  <!-- ========================================
+         PAGE: 3D GLOBE (Injected dynamically)
+         ======================================== -->
+  <div id="page-globe"
+    style="display:none; width: 100%; height: 100%; position: absolute; top: 0; left: 0; z-index: 1000; background: #000; overflow: hidden; border-radius:inherit;">
+    <div id="cesium-container" style="width: 100%; height: 100%;"></div>
+    <div id="entity-info"
+      style="display:none; position:absolute; right:20px; top:20px; width:300px; background:rgba(0,10,20,0.9); border:1px solid #00d4ff; border-top:3px solid #00d4ff; padding:15px; z-index:10002; color:white; font-family:var(--font-mono);">
+      <div style="display:flex; justify-content:space-between; margin-bottom:10px;">
+        <h3 style="margin:0;color:#00d4ff;">ENTITY DATA</h3>
+        <button id="entity-close" style="background:none;border:none;color:#ff5252;cursor:pointer;">✖</button>
+      </div>
+      <div id="entity-content"></div>
+    </div>
+  </div>
+
+  <!-- ========================================
+         PAGE: ABOUT SYSTEM / DATA SOURCES
+         ======================================== -->
+  <div id="page-about" class="page" style="overflow:auto; height:100vh;">
+    <div
+      style="padding: 40px; max-width: 900px; margin: 0 auto; color: #e8e8e8; margin-top: 80px; margin-bottom: 80px; background: rgba(0,0,0,0.6); border: 1px solid rgba(255,255,255,0.1); border-radius: 8px; box-shadow: 0 0 30px rgba(0,212,255,0.1);">
+      <h1
+        style="color: #00d4ff; border-bottom: 2px solid rgba(0, 212, 255, 0.3); padding-bottom: 10px; font-family: var(--font-mono);">
+        AtlasVision Architecture & Data Sources</h1>
+      <p style="font-size:16px; line-height:1.6;">AtlasVision v4.0 is an advanced decentralized intelligence
+        aggregation dashboard. Designed for real-time situational awareness, the system synthesizes data from multiple
+        live endpoints bridging military, civil aviation, maritime, and public intelligence structures.</p>
+
+      <h3 style="color: #ff9100; margin-top: 35px; font-family: var(--font-mono);">✈️ Live Flight Tracking (Multi-Node
+        Proxy)</h3>
+      <p style="line-height:1.5;">The flight tracker implements a waterfall proxy infrastructure. It streams
+        uncensored transponder frames by polling localized nodes at <a href="https://adsb.lol" target="_blank"
+          style="color:#00d4ff;">ADS-B Exchange (adsb.lol / adsb.one)</a>, <b>Flightradar24 API Configurations</b>,
+        and the <b>OpenSky Network API</b> simultaneously. Trajectories are mathematically interpolated to produce
+        continuous Wake Turbulence trails matching real-time aircraft velocity.</p>
+
+      <h3 style="color: #ff1744; margin-top: 35px; font-family: var(--font-mono);">⚔️ Strategic War Dashboard &
+        Panoptic Intercepts</h3>
+      <p style="line-height:1.5;">The conflict mapping layer combines verified physical installations with theoretical
+        threat profiles. Operations mapping utilizes hard-coded Open Source Intelligence (OSINT) coordinates for over
+        120 global military structures. <b>Panoptic Intercepts</b> utilize mathematically simulated orbital ballistic
+        predictions (Arc curves across Leaflet mapping vectors) to automate simulated early warning telemetry
+        detection of Intercontinental Ballistic Missiles (ICBMs).</p>
+
+      <h3 style="color: #00e676; margin-top: 35px; font-family: var(--font-mono);">🛰️ Space & Satellite Command</h3>
+      <p style="line-height:1.5;">Telemetry for low Earth orbit intercepts relies on live Two-Line Element (TLE)
+        datasets continuously propagated via SGP4 algorithmic calculation using <code>satellite.js</code>. The orbital
+        rendering updates relative Earth-Centered, Earth-Fixed computations locally in-browser dynamically.</p>
+
+      <h3 style="color: #40c4ff; margin-top: 35px; font-family: var(--font-mono);">🌍 Unified Intelligence APIs</h3>
+      <ul style="line-height: 1.8; color: #ccc;">
+        <li><b>SIGINT & Cyber:</b> Aggregated unstructured RSS intelligence streams parsed through decentralized proxy
+          handlers.</li>
+        <li><b>Global Maps & Terrain:</b> Multi-layer topography and SAR satellite layers via CartoDB and ESRI World
+          Imagery APIs.</li>
+        <li><b>Ship Tracking:</b> Maritime Automatic Identification System (AIS) localized rendering framework.</li>
+        <li><b>Earthquake/Seismic:</b> Real-time <b>USGS API</b> live endpoints displaying global tectonic magnitudes
+          dynamically.</li>
+        <li><b>3D Globe View:</b> Accelerated multi-threaded 3D planetary rendering using <b>CesiumJS</b>.</li>
+      </ul>
+      <div style="margin-top: 50px; font-size: 11px; color: #555; text-align: center; font-family: var(--font-mono);">
+        GLOBALCONTROL CORE ENGINE - CLASSIFIED SIMULATION INTERFACE<br>Build Rev 4.02.1 - DO NOT REDISTRIBUTE
+      </div>
+    </div>
+  </div>
+
+  <script type="module" src="/src/main.ts"></script>
+  </div>
+</body>
+
+</html>
