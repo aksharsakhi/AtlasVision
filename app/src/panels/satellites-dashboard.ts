@@ -28,10 +28,13 @@ const SAT_TILE_LAYERS = {
 };
 
 const TLE_SOURCES = [
-    { cat: 'Stations', url: 'https://celestrak.org/NORAD/elements/gp.php?GROUP=stations&FORMAT=tle' },
-    { cat: 'Active', url: 'https://celestrak.org/NORAD/elements/gp.php?GROUP=active&FORMAT=tle' },
-    { cat: 'Starlink', url: 'https://celestrak.org/NORAD/elements/gp.php?GROUP=starlink&FORMAT=tle' },
+    { cat: 'Stations', url: '/api/tle?group=stations' },
+    { cat: 'Active', url: '/api/tle?group=active' },
+    { cat: 'Starlink', url: '/api/tle?group=starlink' },
+    { cat: 'OneWeb', url: '/api/tle?group=oneweb' },
+    { cat: 'Weather', url: '/api/tle?group=weather' },
 ];
+
 
 function parseTLE(text: string, cat: string): SatRecord[] {
     const lines = text.trim().split('\n');

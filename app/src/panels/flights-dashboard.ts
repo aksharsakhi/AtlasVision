@@ -364,34 +364,76 @@ function switchFlightLayer(type: keyof typeof TILE_LAYERS) {
     });
 }
 
-function searchFlights(query: string) {
-    const q = query.toLowerCase().trim();
+async function searchFlights(query: string) {
+    const q = query.trim();
     if (!q) return;
-    const found = allFlights.filter(f =>
-        f.callsign.toLowerCase().includes(q) ||
-        f.icao24.toLowerCase().includes(q) ||
-        f.originCountry.toLowerCase().includes(q)
-    );
 
     const resultsEl = document.getElementById('flight-search-results');
     if (!resultsEl) return;
 
-    if (!found.length) {
-        resultsEl.innerHTML = `<p style="color:#555;padding:8px;font-size:11px;">No flights found for "${query}"</p>`;
-        return;
-    }
+    resultsEl.innerHTML = `<div style="color:#555;padding:8px;font-size:11px;">🔍 Searching ${allFlights.length.toLocaleString()} flights...</div>`;
 
-    resultsEl.innerHTML = found.slice(0, 20).map(f => `
-    <div onclick="window.__gcFocusFlight('${f.icao24}')"
-      style="padding:8px;border-bottom:1px solid rgba(255,255,255,0.05);cursor:pointer;font-family:monospace;font-size:11px;transition:background 0.1s;"
-      onmouseover="this.style.background='rgba(0,212,255,0.05)'" onmouseout="this.style.background=''">
-      <span style="color:#00d4ff;font-weight:bold;">✈ ${f.callsign || f.icao24}</span> 
-      <span style="color:#555;float:right;">${f.onGround ? '🔴 GND' : '🟢 AIR'}</span><br/>
-      <span style="color:#aaa;">${f.originCountry}</span>
-      <span style="color:#666;float:right;">${Math.round(f.altitude)}m · ${Math.round(f.velocity * 1.944)}kts</span>
-    </div>
-  `).join('');
+    try {
+        // Use server-side search (searches full 14k+ cached set)
+        const r = await fetch(`/api/flight-search?q=${encodeURIComponent(q)}`);
+        const serverResults = r.ok ? await r.json() : [];
+
+        // Also search local in-memory for instant results
+        const localResults = allFlights
+            .filter(f =>
+                f.callsign.toLowerCase().includes(q.toLowerCase()) ||
+                f.icao24.toLowerCase().includes(q.toLowerCase()) ||
+                f.originCountry.toLowerCase().includes(q.toLowerCase())
+            )
+            .slice(0, 10)
+            .map(f => ({
+                icao: f.icao24, callsign: f.callsign, country: f.originCountry,
+                lon: f.longitude, lat: f.latitude,
+                altFt: Math.round(f.altitude / 0.3048),
+                speedKts: Math.round(f.velocity * 1.944),
+                heading: f.heading,
+            }));
+
+        // Merge, deduplicate
+        const seen = new Set<string>();
+        const combined = [...serverResults, ...localResults].filter(f => {
+            if (seen.has(f.icao)) return false;
+            seen.add(f.icao);
+            return true;
+        }).slice(0, 20);
+
+        if (!combined.length) {
+            resultsEl.innerHTML = `<p style="color:#555;padding:8px;font-size:11px;">No flights found for "<b style="color:#aaa">${q}</b>"<br/><span style="font-size:10px;">Try: callsign (e.g. AAL123), ICAO hex, or country</span></p>`;
+            return;
+        }
+
+        resultsEl.innerHTML = combined.map(f => `
+        <div onclick="window.__gcFocusFlight('${f.icao}')"
+          style="padding:8px 10px;border-bottom:1px solid rgba(255,255,255,0.05);cursor:pointer;font-size:11px;transition:background 0.1s;"
+          onmouseover="this.style.background='rgba(0,212,255,0.07)'" onmouseout="this.style.background=''">
+          <div style="display:flex;justify-content:space-between;align-items:center;">
+            <span style="color:#00d4ff;font-weight:bold;font-family:monospace;">✈ ${f.callsign || f.icao}</span>
+            <span style="font-size:9px;padding:2px 5px;border-radius:8px;background:rgba(0,212,255,0.1);color:#00d4ff;">${f.altFt > 0 ? `${f.altFt.toLocaleString()}ft` : 'GND'}</span>
+          </div>
+          <div style="color:#666;font-size:10px;margin-top:2px;display:flex;gap:12px;">
+            <span>${f.country || '—'}</span>
+            <span>${f.speedKts || 0} kts</span>
+            <span>HDG ${f.heading || 0}°</span>
+          </div>
+        </div>
+      `).join('');
+    } catch {
+        // Fallback to local only
+        const found = allFlights.filter(f =>
+            f.callsign.toLowerCase().includes(q.toLowerCase()) ||
+            f.icao24.toLowerCase().includes(q.toLowerCase())
+        ).slice(0, 15);
+        resultsEl.innerHTML = found.length
+            ? found.map(f => `<div onclick="window.__gcFocusFlight('${f.icao24}')" style="padding:8px;border-bottom:1px solid rgba(255,255,255,0.05);cursor:pointer;font-size:11px;color:#00d4ff;">✈ ${f.callsign || f.icao24}</div>`).join('')
+            : `<p style="color:#555;padding:8px;font-size:11px;">No results</p>`;
+    }
 }
+
 
 // ── AVIATION NEWS FEED (via backend RSS proxy) ────────────────────────────
 async function loadAviationNews() {
