@@ -389,26 +389,23 @@ function initPageNavigation() {
   const tabs = document.querySelectorAll('.tab-btn') as NodeListOf<HTMLButtonElement>;
   const pages = document.querySelectorAll('.page') as NodeListOf<HTMLDivElement>;
 
-  // Normal Dashboard Pages
   tabs.forEach(tab => {
     tab.addEventListener('click', () => {
-      const pg = tab.dataset.page;
+      const pg = tab.dataset.page!;
       tabs.forEach(t => t.classList.remove('active'));
       tab.classList.add('active');
+      // Show only the matching page (all IDs are now page-{data-page})
       pages.forEach(p => p.classList.toggle('active', p.id === `page-${pg}`));
 
+      // Invalidate Leaflet maps after layout settles
       setTimeout(() => {
         if (pg === 'dashboard') getMap()?.invalidateSize();
-        // 'space' tab shows 'page-satellites' (merged Space & Satellites)
-        if (pg === 'space') {
-          pages.forEach(p => p.classList.toggle('active', p.id === 'page-satellites'));
-        }
         if (pg === 'intel-cyber' && intelCyberMap) intelCyberMap.invalidateSize();
         if (pg === 'war' && warMap) warMap.invalidateSize();
         if (pg === 'flights' && flightMap) flightMap.invalidateSize();
-        if ((pg === 'satellites' || pg === 'space') && satelliteMap) satelliteMap.invalidateSize();
+        if (pg === 'satellites' && satelliteMap) satelliteMap.invalidateSize();
         if (pg === 'health' && healthMap) healthMap.invalidateSize();
-      }, 100);
+      }, 120);
     });
   });
 
@@ -508,32 +505,62 @@ window.addEventListener('error', (event) => {
   });
 });
 
-// User geolocation handler
+// User geolocation — auto-request on load, show on ALL maps
 let geoMarker: L.CircleMarker | null = null;
+const geoMarkers: L.CircleMarker[] = [];
+
+function placeGeoMarkerOnMap(m: L.Map, lat: number, lon: number) {
+  const marker = L.circleMarker([lat, lon], {
+    radius: 10, color: '#00e5ff', fillColor: '#00e5ff',
+    fillOpacity: 0.5, weight: 3, className: 'pulse',
+  }).addTo(m);
+  marker.bindPopup('<b style="color:#00e5ff;">📍 Your Location</b>');
+  geoMarkers.push(marker);
+}
+
 function setupGeolocation() {
   const btn = document.getElementById('btn-geolocate');
-  if (btn) {
-    btn.addEventListener('click', () => {
-      const m = getMap();
-      if (!m) return;
-      btn.innerHTML = '🔄 Locating...';
-      navigator.geolocation.getCurrentPosition((pos) => {
-        const { latitude, longitude } = pos.coords;
-        m.flyTo([latitude, longitude], 10, { animate: true, duration: 1.5 });
-        if (geoMarker) {
-          m.removeLayer(geoMarker);
-        }
-        geoMarker = L.circleMarker([latitude, longitude], { radius: 10, color: '#00e5ff', fillColor: '#00e5ff', fillOpacity: 0.5, weight: 3, className: 'pulse' }).addTo(m);
-        geoMarker.bindPopup('<b style="color:#00e5ff;">📍 Your Location</b>').openPopup();
-        btn.innerHTML = '📍 My Location';
-      }, (error) => {
-        console.error('Geolocation error:', error);
-        btn.innerHTML = '❌ Location Denied';
-        setTimeout(() => btn.innerHTML = '📍 My Location', 3000);
+
+  const locate = () => {
+    if (!navigator.geolocation) return;
+    navigator.geolocation.getCurrentPosition((pos) => {
+      const { latitude: lat, longitude: lon } = pos.coords;
+
+      // Clear old markers
+      geoMarkers.forEach(m2 => {
+        try { m2.remove(); } catch { }
       });
-    });
+      geoMarkers.length = 0;
+
+      // Place on all active maps
+      const mainMap = getMap();
+      if (mainMap) {
+        mainMap.flyTo([lat, lon], 6, { animate: true, duration: 1.2 });
+        placeGeoMarkerOnMap(mainMap, lat, lon);
+      }
+      if (flightMap) placeGeoMarkerOnMap(flightMap, lat, lon);
+      if (healthMap) placeGeoMarkerOnMap(healthMap, lat, lon);
+      if (warMap) placeGeoMarkerOnMap(warMap, lat, lon);
+      if (intelCyberMap) placeGeoMarkerOnMap(intelCyberMap, lat, lon);
+      if (satelliteMap) placeGeoMarkerOnMap(satelliteMap, lat, lon);
+
+      if (btn) { btn.innerHTML = '📍 My Location'; btn.style.color = '#00e5ff'; }
+      console.log(`📍 User location: ${lat.toFixed(4)}, ${lon.toFixed(4)}`);
+    }, (err) => {
+      console.warn('Geolocation denied or unavailable:', err.message);
+      if (btn) btn.innerHTML = '📍 My Location';
+    }, { enableHighAccuracy: false, timeout: 10000 });
+  };
+
+  // Auto-request on page load
+  locate();
+
+  // Also wire button click
+  if (btn) {
+    btn.addEventListener('click', locate);
   }
 }
+
 
 window.addEventListener('unhandledrejection', (event) => {
   reportError(event.reason, 'error', { type: 'unhandled_promise_rejection' });

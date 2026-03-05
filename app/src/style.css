@@ -316,10 +316,14 @@ body {
   flex: 1;
   overflow: hidden;
   flex-direction: column;
+  height: 0;
+  /* collapsed when hidden */
 }
 
 .page.active {
   display: flex;
+  height: calc(100vh - var(--nav-height));
+  overflow: hidden;
 }
 
 /* ======================================
@@ -1726,7 +1730,7 @@ body {
   padding: var(--space-md);
 }
 
-.apod-card {}
+
 
 .apod-img {
   width: 100%;
@@ -1744,7 +1748,7 @@ body {
   margin-bottom: var(--space-sm);
 }
 
-.apod-info {}
+
 
 .apod-title {
   font-size: 12px;

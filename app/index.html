@@ -49,7 +49,7 @@
         <button class="tab-btn" data-page="flights" id="tab-flights">
           <span>✈️</span> Flights
         </button>
-        <button class="tab-btn" data-page="space" id="tab-space">
+        <button class="tab-btn" data-page="satellites" id="tab-space">
           <span>🚀</span> Space & Satellites
         </button>
         <button class="tab-btn" data-page="intel-cyber" id="tab-intel-cyber">
@@ -785,53 +785,78 @@
   <!-- ========================================
          PAGE: ABOUT SYSTEM / DATA SOURCES
          ======================================== -->
-  <div id="page-about" class="page" style="overflow:auto; height:100vh;">
-    <div
-      style="padding: 40px; max-width: 900px; margin: 0 auto; color: #e8e8e8; margin-top: 80px; margin-bottom: 80px; background: rgba(0,0,0,0.6); border: 1px solid rgba(255,255,255,0.1); border-radius: 8px; box-shadow: 0 0 30px rgba(0,212,255,0.1);">
-      <h1
-        style="color: #00d4ff; border-bottom: 2px solid rgba(0, 212, 255, 0.3); padding-bottom: 10px; font-family: var(--font-mono);">
-        AtlasVision Architecture & Data Sources</h1>
-      <p style="font-size:16px; line-height:1.6;">AtlasVision v4.0 is an advanced decentralized intelligence
-        aggregation dashboard. Designed for real-time situational awareness, the system synthesizes data from multiple
-        live endpoints bridging military, civil aviation, maritime, and public intelligence structures.</p>
-
-      <h3 style="color: #ff9100; margin-top: 35px; font-family: var(--font-mono);">✈️ Live Flight Tracking (Multi-Node
-        Proxy)</h3>
-      <p style="line-height:1.5;">The flight tracker implements a waterfall proxy infrastructure. It streams
-        uncensored transponder frames by polling localized nodes at <a href="https://adsb.lol" target="_blank"
-          style="color:#00d4ff;">ADS-B Exchange (adsb.lol / adsb.one)</a>, <b>Flightradar24 API Configurations</b>,
-        and the <b>OpenSky Network API</b> simultaneously. Trajectories are mathematically interpolated to produce
-        continuous Wake Turbulence trails matching real-time aircraft velocity.</p>
-
-      <h3 style="color: #ff1744; margin-top: 35px; font-family: var(--font-mono);">⚔️ Strategic War Dashboard &
-        Panoptic Intercepts</h3>
-      <p style="line-height:1.5;">The conflict mapping layer combines verified physical installations with theoretical
-        threat profiles. Operations mapping utilizes hard-coded Open Source Intelligence (OSINT) coordinates for over
-        120 global military structures. <b>Panoptic Intercepts</b> utilize mathematically simulated orbital ballistic
-        predictions (Arc curves across Leaflet mapping vectors) to automate simulated early warning telemetry
-        detection of Intercontinental Ballistic Missiles (ICBMs).</p>
-
-      <h3 style="color: #00e676; margin-top: 35px; font-family: var(--font-mono);">🛰️ Space & Satellite Command</h3>
-      <p style="line-height:1.5;">Telemetry for low Earth orbit intercepts relies on live Two-Line Element (TLE)
-        datasets continuously propagated via SGP4 algorithmic calculation using <code>satellite.js</code>. The orbital
-        rendering updates relative Earth-Centered, Earth-Fixed computations locally in-browser dynamically.</p>
-
-      <h3 style="color: #40c4ff; margin-top: 35px; font-family: var(--font-mono);">🌍 Unified Intelligence APIs</h3>
-      <ul style="line-height: 1.8; color: #ccc;">
-        <li><b>SIGINT & Cyber:</b> Aggregated unstructured RSS intelligence streams parsed through decentralized proxy
-          handlers.</li>
-        <li><b>Global Maps & Terrain:</b> Multi-layer topography and SAR satellite layers via CartoDB and ESRI World
-          Imagery APIs.</li>
-        <li><b>Ship Tracking:</b> Maritime Automatic Identification System (AIS) localized rendering framework.</li>
-        <li><b>Earthquake/Seismic:</b> Real-time <b>USGS API</b> live endpoints displaying global tectonic magnitudes
-          dynamically.</li>
-        <li><b>3D Globe View:</b> Accelerated multi-threaded 3D planetary rendering using <b>CesiumJS</b>.</li>
-      </ul>
-      <div style="margin-top: 50px; font-size: 11px; color: #555; text-align: center; font-family: var(--font-mono);">
-        GLOBALCONTROL CORE ENGINE - CLASSIFIED SIMULATION INTERFACE<br>Build Rev 4.02.1 - DO NOT REDISTRIBUTE
+  <div id="page-about" class="page" style="overflow-y:auto;">
+    <div style="padding:40px 32px; max-width:1100px; margin:0 auto; color:#e8e8e8; padding-bottom:80px;">
+      <div style="text-align:center; margin-bottom:48px;">
+        <div style="font-size:48px; margin-bottom:12px;">🌍</div>
+        <h1 style="font-size:32px; font-weight:900; background:linear-gradient(135deg,#00d4ff,#a97cff); -webkit-background-clip:text; -webkit-text-fill-color:transparent; margin-bottom:8px;">AtlasVision v4.0</h1>
+        <p style="color:#666; font-size:14px; font-family:monospace;">Real-Time Decentralized Global Intelligence Platform</p>
+        <div style="margin-top:16px; display:flex; gap:10px; justify-content:center; flex-wrap:wrap;">
+          <span style="padding:4px 12px; border-radius:20px; background:rgba(0,212,255,0.1); border:1px solid rgba(0,212,255,0.3); font-size:11px; color:#00d4ff;">TypeScript</span>
+          <span style="padding:4px 12px; border-radius:20px; background:rgba(169,124,255,0.1); border:1px solid rgba(169,124,255,0.3); font-size:11px; color:#a97cff;">Vite.js</span>
+          <span style="padding:4px 12px; border-radius:20px; background:rgba(0,230,118,0.1); border:1px solid rgba(0,230,118,0.3); font-size:11px; color:#00e676;">Leaflet.js</span>
+          <span style="padding:4px 12px; border-radius:20px; background:rgba(0,212,255,0.1); border:1px solid rgba(0,212,255,0.3); font-size:11px; color:#00d4ff;">CesiumJS</span>
+          <span style="padding:4px 12px; border-radius:20px; background:rgba(255,144,0,0.1); border:1px solid rgba(255,144,0,0.3); font-size:11px; color:#ff9100;">Node.js + Express</span>
+        </div>
       </div>
+      <div style="margin-bottom:48px;">
+        <h2 style="color:#00d4ff; font-size:18px; margin-bottom:20px; font-family:monospace;">📡 Live Data Sources</h2>
+        <div style="overflow-x:auto;">
+          <table style="width:100%; border-collapse:collapse; font-size:12px;">
+            <thead>
+              <tr style="border-bottom:2px solid rgba(0,212,255,0.2);">
+                <th style="text-align:left; padding:10px 12px; color:#00d4ff; font-family:monospace;">Dashboard</th>
+                <th style="text-align:left; padding:10px 12px; color:#00d4ff; font-family:monospace;">Data Source</th>
+                <th style="text-align:left; padding:10px 12px; color:#00d4ff; font-family:monospace;">Protocol</th>
+                <th style="text-align:left; padding:10px 12px; color:#00d4ff; font-family:monospace;">Update Rate</th>
+                <th style="text-align:left; padding:10px 12px; color:#00d4ff; font-family:monospace;">Coverage</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr style="border-bottom:1px solid rgba(255,255,255,0.04);"><td style="padding:10px 12px; color:#fff; font-weight:bold;">✈️ Flights (Primary)</td><td style="padding:10px 12px; color:#aaa;">ADS-B Exchange: adsb.lol, adsb.fi, adsb.one</td><td style="padding:10px 12px;"><span style="color:#00e676; font-family:monospace;">HTTP/REST</span></td><td style="padding:10px 12px; color:#aaa;">15s</td><td style="padding:10px 12px; color:#aaa;">Global — 14,000+ aircraft</td></tr>
+              <tr style="border-bottom:1px solid rgba(255,255,255,0.04); background:rgba(255,255,255,0.01);"><td style="padding:10px 12px; color:#fff; font-weight:bold;">✈️ Flights (Backup)</td><td style="padding:10px 12px; color:#aaa;">Flightradar24 Data Cloud</td><td style="padding:10px 12px;"><span style="color:#00e676; font-family:monospace;">HTTP/REST</span></td><td style="padding:10px 12px; color:#aaa;">30s</td><td style="padding:10px 12px; color:#aaa;">Global</td></tr>
+              <tr style="border-bottom:1px solid rgba(255,255,255,0.04);"><td style="padding:10px 12px; color:#fff; font-weight:bold;">✈️ Flights (Fallback)</td><td style="padding:10px 12px; color:#aaa;">OpenSky Network API</td><td style="padding:10px 12px;"><span style="color:#00e676; font-family:monospace;">HTTP/REST</span></td><td style="padding:10px 12px; color:#aaa;">60s</td><td style="padding:10px 12px; color:#aaa;">Global (free tier)</td></tr>
+              <tr style="border-bottom:1px solid rgba(255,255,255,0.04); background:rgba(255,255,255,0.01);"><td style="padding:10px 12px; color:#fff; font-weight:bold;">🛰️ Satellites</td><td style="padding:10px 12px; color:#aaa;">CelesTrak NORAD TLEs (via /api/tle proxy)</td><td style="padding:10px 12px;"><span style="color:#a97cff; font-family:monospace;">TLE + SGP4</span></td><td style="padding:10px 12px; color:#aaa;">6h refresh</td><td style="padding:10px 12px; color:#aaa;">6,000+ satellites</td></tr>
+              <tr style="border-bottom:1px solid rgba(255,255,255,0.04);"><td style="padding:10px 12px; color:#fff; font-weight:bold;">🌍 Earthquakes</td><td style="padding:10px 12px; color:#aaa;">USGS Earthquake Hazards API</td><td style="padding:10px 12px;"><span style="color:#00e676; font-family:monospace;">HTTP/REST + GeoJSON</span></td><td style="padding:10px 12px; color:#aaa;">5min</td><td style="padding:10px 12px; color:#aaa;">Global (M2.5+)</td></tr>
+              <tr style="border-bottom:1px solid rgba(255,255,255,0.04); background:rgba(255,255,255,0.01);"><td style="padding:10px 12px; color:#fff; font-weight:bold;">🏥 Health</td><td style="padding:10px 12px; color:#aaa;">WHO RSS, STAT News, CDC Feeds</td><td style="padding:10px 12px;"><span style="color:#ff9100; font-family:monospace;">RSS/XML</span></td><td style="padding:10px 12px; color:#aaa;">15min</td><td style="padding:10px 12px; color:#aaa;">Global outbreaks</td></tr>
+              <tr style="border-bottom:1px solid rgba(255,255,255,0.04);"><td style="padding:10px 12px; color:#fff; font-weight:bold;">🧠 Cyber / SIGINT</td><td style="padding:10px 12px; color:#aaa;">Krebs on Security, The Hacker News RSS</td><td style="padding:10px 12px;"><span style="color:#ff9100; font-family:monospace;">RSS/XML</span></td><td style="padding:10px 12px; color:#aaa;">15min</td><td style="padding:10px 12px; color:#aaa;">Live CVEs + incidents</td></tr>
+              <tr style="border-bottom:1px solid rgba(255,255,255,0.04); background:rgba(255,255,255,0.01);"><td style="padding:10px 12px; color:#fff; font-weight:bold;">💹 Finance</td><td style="padding:10px 12px; color:#aaa;">TradingView Live Market Widgets</td><td style="padding:10px 12px;"><span style="color:#00e676; font-family:monospace;">WebSocket</span></td><td style="padding:10px 12px; color:#aaa;">Real-time tick</td><td style="padding:10px 12px; color:#aaa;">Stocks, Crypto, FOREX</td></tr>
+              <tr style="border-bottom:1px solid rgba(255,255,255,0.04);"><td style="padding:10px 12px; color:#fff; font-weight:bold;">🗺️ Maps (all)</td><td style="padding:10px 12px; color:#aaa;">CartoDB Dark, ESRI World Imagery, OpenTopoMap, OSM</td><td style="padding:10px 12px;"><span style="color:#00e676; font-family:monospace;">XYZ Tiles</span></td><td style="padding:10px 12px; color:#aaa;">On-demand</td><td style="padding:10px 12px; color:#aaa;">Global</td></tr>
+              <tr style="background:rgba(255,255,255,0.01);"><td style="padding:10px 12px; color:#fff; font-weight:bold;">🌍 3D Globe</td><td style="padding:10px 12px; color:#aaa;">Cesium Ion — terrain, imagery, stars</td><td style="padding:10px 12px;"><span style="color:#a97cff; font-family:monospace;">WebGL</span></td><td style="padding:10px 12px; color:#aaa;">Real-time 3D</td><td style="padding:10px 12px; color:#aaa;">Global HD terrain</td></tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+      <div style="display:grid; grid-template-columns:1fr 1fr; gap:16px; margin-bottom:40px;">
+        <div style="padding:20px; background:rgba(0,212,255,0.04); border:1px solid rgba(0,212,255,0.15); border-radius:8px;">
+          <h3 style="color:#00d4ff; font-size:14px; margin-bottom:12px;">Frontend</h3>
+          <ul style="color:#aaa; font-size:12px; line-height:2; list-style:none; padding:0;">
+            <li>⚡ <b style="color:#fff;">Vite + TypeScript</b> — blazing fast build</li>
+            <li>🗺️ <b style="color:#fff;">Leaflet.js</b> — 2D interactive maps</li>
+            <li>🌍 <b style="color:#fff;">CesiumJS</b> — WebGL 3D globe</li>
+            <li>🛰️ <b style="color:#fff;">satellite.js</b> — SGP4 orbit propagation</li>
+            <li>📈 <b style="color:#fff;">TradingView</b> — live market charts</li>
+          </ul>
+        </div>
+        <div style="padding:20px; background:rgba(169,124,255,0.04); border:1px solid rgba(169,124,255,0.15); border-radius:8px;">
+          <h3 style="color:#a97cff; font-size:14px; margin-bottom:12px;">Backend (Node.js + Express)</h3>
+          <ul style="color:#aaa; font-size:12px; line-height:2; list-style:none; padding:0;">
+            <li>✈️ <b style="color:#fff;">/api/flights</b> — multi-source ADS-B aggregation</li>
+            <li>🛰️ <b style="color:#fff;">/api/tle</b> — CelesTrak proxy (CORS bypass)</li>
+            <li>📰 <b style="color:#fff;">/api/rss</b> — universal RSS feed proxy</li>
+            <li>🔍 <b style="color:#fff;">/api/flight-search</b> — full fleet search</li>
+            <li>📋 <b style="color:#fff;">/api/flight/:id</b> — per-flight details</li>
+          </ul>
+        </div>
+      </div>
+      <div style="padding:20px; background:rgba(0,230,118,0.04); border:1px solid rgba(0,230,118,0.15); border-radius:8px;">
+        <h3 style="color:#00e676; font-size:14px; margin-bottom:8px;">🔒 Privacy — User Location</h3>
+        <p style="color:#aaa; font-size:12px; line-height:1.8;">Your location (if permission granted) is used <b style="color:#fff;">only locally in your browser</b> to center maps and place a marker. It is <b style="color:#fff;">never stored, sent to any server, or shared</b> with third parties. Data stays within your device session.</p>
+      </div>
+      <div style="text-align:center; margin-top:40px; font-size:11px; color:#333; font-family:monospace;">AtlasVision v4.0 — Open Intelligence Platform — Build 4.0.3</div>
     </div>
   </div>
+
 
   <script type="module" src="/src/main.ts"></script>
   </div>
