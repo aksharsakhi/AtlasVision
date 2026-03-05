@@ -562,8 +562,58 @@ export async function initFlightsDashboard() {
         searchInput.addEventListener('keydown', (e) => { if (e.key === 'Enter') searchFlights(searchInput.value); });
     }
 
-    // Load aviation news on the right panel
+    // Quick filter chips
+    const CALLSIGN_PREFIXES: Record<string, string[]> = {
+        commercial: ['AA', 'UA', 'DL', 'BA', 'LH', 'AF', 'EK', 'QR', 'SQ', 'CX', 'TK', 'KL', 'FR', 'U2', 'WN', 'SW', 'AY', 'IB', 'VS', 'AC'],
+        cargo: ['FDX', 'UPS', 'GTI', 'ABX', 'CLX', 'DHL', 'POL', 'CKS', 'ATN', 'SLK', 'ICS'],
+        military: ['RCH', 'CNV', 'FORTE', 'REACH', 'JAKE', 'KNIFE', 'SWORD', 'GHOST', 'VIPER'],
+        private: [],
+    };
+
+    (window as any).__gcFlightFilter = (type: string) => {
+        const resultsEl = document.getElementById('flight-search-results');
+        if (!resultsEl) return;
+        if (!type) {
+            resultsEl.innerHTML = '<div style="color:#444; font-size:11px; padding:8px; text-align:center;">Search by callsign, ICAO hex<br/>or use quick filters above</div>';
+            return;
+        }
+
+        let filtered: FlightState[];
+        if (type === 'private') {
+            // Private: airborne, no major airline prefix
+            const allPrefixes = Object.values(CALLSIGN_PREFIXES).flat();
+            filtered = allFlights.filter(f => !f.onGround && f.callsign && !allPrefixes.some(p => f.callsign.startsWith(p)));
+        } else {
+            const prefixes = CALLSIGN_PREFIXES[type] || [];
+            filtered = allFlights.filter(f => prefixes.some(p => f.callsign.startsWith(p)));
+        }
+
+        filtered = filtered.slice(0, 30);
+        if (!filtered.length) {
+            resultsEl.innerHTML = `<p style="color:#555; padding:8px; font-size:11px;">No ${type} flights found in current data</p>`;
+            return;
+        }
+        resultsEl.innerHTML = filtered.map(f => `
+            <div onclick="window.__gcFocusFlight('${f.icao24}')"
+              style="padding:7px 10px; border-bottom:1px solid rgba(255,255,255,0.05); cursor:pointer; font-size:11px; transition:background 0.1s;"
+              onmouseover="this.style.background='rgba(0,212,255,0.07)'" onmouseout="this.style.background=''">
+              <div style="display:flex; justify-content:space-between; align-items:center;">
+                <span style="color:#00d4ff; font-weight:bold; font-family:monospace;">✈ ${f.callsign || f.icao24}</span>
+                <span style="font-size:9px; color:#555;">${Math.round(f.altitude / 0.3048).toLocaleString()}ft</span>
+              </div>
+              <div style="color:#555; font-size:10px; margin-top:1px;">${f.originCountry} · ${Math.round(f.velocity * 1.944)} kts · ${f.heading}°</div>
+            </div>`).join('');
+    };
+
+    // Update live count whenever flights refresh
+    const updateLiveCount = () => {
+        const el = document.getElementById('flight-live-count');
+        if (el) el.textContent = allFlights.length.toLocaleString();
+    };
+    updateLiveCount();
+    setInterval(updateLiveCount, 5000);
+
+    // Load aviation news
     loadAviationNews();
-    // Refresh news every 15 min
     setInterval(loadAviationNews, 900000);
 }
